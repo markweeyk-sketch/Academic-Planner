@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Gamified Academic Planner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#07070f;--s1:#0d0d1c;--s2:#12121f;--s3:#16162a;--b1:#1e1e38;--b2:#2a2a48;
+  --purple:#7c3aed;--purple-l:#a78bfa;--purple-rgb:124,58,237;
+  --cyan:#06b6d4;--cyan-l:#67e8f9;--cyan-rgb:6,182,212;
+  --pink:#ec4899;--pink-l:#f9a8d4;--pink-rgb:236,72,153;
+  --gold:#f59e0b;--gold-l:#fde68a;--gold-rgb:245,158,11;
+  --green:#22c55e;--green-l:#86efac;--green-rgb:34,197,94;
+  --red:#ef4444;--orange:#f97316;--text:#e2e8f0;--muted:#64748b;--dim:#94a3b8;
+  --r:12px;--rs:8px;--rl:16px;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:14px;line-height:1.5;overflow-x:hidden}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--b2);border-radius:3px}
+
+/* ── TOPNAV ── */
+.topnav{position:sticky;top:0;z-index:100;display:flex;align-items:center;padding:0 20px;height:56px;gap:20px;background:rgba(7,7,15,.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--b1)}
+.brand{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.brand-name{font-family:'Rajdhani',sans-serif;font-size:17px;font-weight:700;letter-spacing:.05em}
+.brand-sub{font-size:11px;color:var(--muted);white-space:nowrap}
+.nav-tabs{display:flex;gap:2px}
+.ntab{padding:5px 14px;border-radius:var(--rs);background:none;border:none;color:var(--muted);font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;font-family:'Inter',sans-serif}
+.ntab:hover{color:var(--text);background:var(--s2)}
+.ntab.active{color:var(--text);background:var(--s3);border-bottom:2px solid var(--purple)}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.xp-badge{display:flex;align-items:center;gap:5px;padding:4px 11px;background:rgba(var(--purple-rgb),.12);border:1px solid rgba(var(--purple-rgb),.4);border-radius:20px;font-size:12px;font-weight:600;color:var(--purple-l);transition:all .3s}
+.nav-avatar{width:32px;height:32px;border-radius:50%;cursor:pointer;background:linear-gradient(135deg,var(--purple),var(--cyan));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;box-shadow:0 0 12px rgba(var(--purple-rgb),.4)}
+
+/* ── LAYOUT ── */
+.app{display:grid;grid-template-columns:252px 1fr;height:calc(100vh - 56px);overflow:hidden}
+.sidebar{background:var(--s1);border-right:1px solid var(--b1);overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:12px}
+.main{overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:14px}
+
+/* ── CARD ── */
+.card{background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);padding:14px}
+.card-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px}
+.card-title{font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+
+/* ── PLAYER CARD ── */
+.player-card{border-radius:var(--r);overflow:hidden;border:1px solid var(--b1)}
+.player-banner{height:66px;position:relative;overflow:hidden;background:radial-gradient(ellipse at 15% 80%,rgba(var(--purple-rgb),.5) 0%,transparent 55%),radial-gradient(ellipse at 85% 20%,rgba(var(--cyan-rgb),.4) 0%,transparent 50%),linear-gradient(135deg,#1a0a2e 0%,#0a0a1a 60%,#081228 100%)}
+.player-banner::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 19px,rgba(var(--purple-rgb),.08) 20px),repeating-linear-gradient(90deg,transparent,transparent 19px,rgba(var(--purple-rgb),.08) 20px)}
+.player-body{background:var(--s2);padding:11px;position:relative}
+.p-avatar{position:absolute;top:-24px;left:10px;width:46px;height:46px;border-radius:10px;border:3px solid var(--s2);background:linear-gradient(135deg,var(--purple),var(--cyan));display:flex;align-items:center;justify-content:center;font-size:22px;box-shadow:0 0 16px rgba(var(--purple-rgb),.35)}
+.p-name-wrap{padding-top:26px}
+.p-name{font-family:'Rajdhani',sans-serif;font-size:17px;font-weight:700}
+.p-title{font-size:11px;color:var(--cyan);margin-top:1px}
+.xp-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin:9px 0 3px}
+.xp-bar{height:5px;background:var(--s3);border-radius:3px;overflow:hidden}
+.xp-fill{height:100%;background:linear-gradient(90deg,var(--purple),var(--cyan));border-radius:3px;transition:width .5s ease}
+.p-stats{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px}
+.pstat{padding:5px 7px;border-radius:var(--rs);font-size:11px;font-weight:600;text-align:center;background:var(--s3);border:1px solid var(--b1)}
+.pstat.pu{border-color:rgba(var(--purple-rgb),.35);color:var(--purple-l);background:rgba(var(--purple-rgb),.1)}
+.pstat.cy{border-color:rgba(var(--cyan-rgb),.35);color:var(--cyan-l);background:rgba(var(--cyan-rgb),.1)}
+.pstat.pi{border-color:rgba(var(--pink-rgb),.35);color:var(--pink-l);background:rgba(var(--pink-rgb),.1)}
+.pstat.go{border-color:rgba(var(--gold-rgb),.35);color:var(--gold-l);background:rgba(var(--gold-rgb),.1)}
+
+/* ── XP OVERVIEW ── */
+.xp-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.xp-box{background:var(--s3);border:1px solid var(--b1);border-radius:var(--rs);padding:8px 9px;text-align:center}
+.xp-val{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;line-height:1}
+.xp-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-top:2px}
+
+/* ── RADAR ── */
+.radar-wrap{display:flex;justify-content:center;align-items:center;padding:4px 0}
+.radar-svg{width:170px;height:170px}
+
+/* ── SUBJECTS SIDEBAR ── */
+.subj-item{display:flex;align-items:center;gap:9px;padding:7px 0;border-bottom:1px solid var(--b1)}
+.subj-item:last-child{border-bottom:none}
+.sdot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.sname{font-size:12px;font-weight:500;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.scnt{font-size:10px;color:var(--muted);background:var(--s3);padding:1px 6px;border-radius:9px}
+.subj-acts{display:flex;gap:2px;opacity:0;transition:opacity .15s}
+.subj-item:hover .subj-acts{opacity:1}
+
+/* ── PROGRESS ── */
+.prog-list{display:flex;flex-direction:column;gap:7px}
+.prog-row{display:flex;align-items:center;gap:7px}
+.prog-lbl{font-size:11px;color:var(--muted);width:44px}
+.prog-track{flex:1;height:4px;background:var(--s3);border-radius:2px;overflow:hidden}
+.prog-fill{height:100%;border-radius:2px}
+.prog-pct{font-size:10px;color:var(--muted);width:28px;text-align:right}
+
+/* ── STREAKS ── */
+.streak-item{display:flex;align-items:center;gap:8px;padding:8px;background:var(--s3);border:1px solid var(--b1);border-radius:var(--rs)}
+.strk-icon{font-size:15px}
+.strk-info{flex:1}
+.strk-name{font-size:12px;font-weight:600}
+.strk-days{font-size:10px;color:var(--muted)}
+.strk-num{font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:700;color:var(--gold-l)}
+
+/* ── TAG PILLS ── */
+.tags-row{display:flex;flex-wrap:wrap;gap:7px}
+.tag{padding:4px 11px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;transition:filter .15s;border:1px solid transparent}
+.tag:hover{filter:brightness(1.25)}
+.tag.pu{background:rgba(var(--purple-rgb),.18);border-color:rgba(var(--purple-rgb),.45);color:var(--purple-l)}
+.tag.pi{background:rgba(var(--pink-rgb),.18);border-color:rgba(var(--pink-rgb),.45);color:var(--pink-l)}
+.tag.cy{background:rgba(var(--cyan-rgb),.18);border-color:rgba(var(--cyan-rgb),.45);color:var(--cyan-l)}
+.tag.gr{background:rgba(var(--green-rgb),.18);border-color:rgba(var(--green-rgb),.45);color:var(--green-l)}
+.tag.go{background:rgba(var(--gold-rgb),.18);border-color:rgba(var(--gold-rgb),.45);color:var(--gold-l)}
+.tag.or{background:rgba(247,115,22,.18);border-color:rgba(247,115,22,.45);color:#fdba74}
+
+/* ── SECTION HEADER ── */
+.sec-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px}
+.sec-title{font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;display:flex;align-items:center;gap:7px}
+.sec-icon{width:22px;height:22px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
+.ic-pu{background:rgba(var(--purple-rgb),.25)}
+.ic-cy{background:rgba(var(--cyan-rgb),.25)}
+.ic-go{background:rgba(var(--gold-rgb),.25)}
+.ic-gr{background:rgba(var(--green-rgb),.25)}
+.ic-pi{background:rgba(var(--pink-rgb),.25)}
+
+/* ── BUTTONS ── */
+.btn{padding:5px 11px;border-radius:var(--rs);border:1px solid var(--b2);background:var(--s3);color:var(--text);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;font-family:'Inter',sans-serif}
+.btn:hover{background:var(--b1)}
+.btn.primary{background:var(--purple);border-color:var(--purple);color:#fff}
+.btn.primary:hover{background:#6d28d9}
+.btn.done-btn{background:rgba(var(--green-rgb),.2);border-color:rgba(var(--green-rgb),.5);color:var(--green-l)}
+.btn.danger{background:rgba(239,68,68,.15);border-color:rgba(239,68,68,.35);color:#fca5a5}
+.btn.sm{padding:3px 8px;font-size:11px}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--muted)}
+.btn.ghost:hover{color:var(--text);background:var(--s3)}
+.btn.icon{padding:3px 6px;font-size:11px;min-width:24px}
+
+/* ── BANNER CARDS ── */
+.cards-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.bcard{border-radius:var(--r);overflow:hidden;border:1px solid var(--b1);background:var(--s2);transition:transform .15s,border-color .15s;cursor:pointer}
+.bcard:hover{transform:translateY(-2px);border-color:var(--b2);z-index:1;position:relative}
+.cbanner{height:110px;position:relative;overflow:hidden}
+.bn-pu{background:radial-gradient(ellipse at 15% 85%,rgba(var(--purple-rgb),.7) 0%,transparent 52%),radial-gradient(ellipse at 85% 15%,rgba(var(--cyan-rgb),.5) 0%,transparent 48%),linear-gradient(135deg,#12082a 0%,#08081a 60%,#081228 100%)}
+.bn-pu::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 19px,rgba(var(--purple-rgb),.1) 20px),repeating-linear-gradient(90deg,transparent,transparent 19px,rgba(var(--purple-rgb),.1) 20px)}
+.bn-pu::after{content:'';position:absolute;bottom:-15px;right:-15px;width:90px;height:90px;border-radius:50%;background:radial-gradient(circle,rgba(var(--purple-rgb),.55) 0%,transparent 70%)}
+.bn-pi{background:radial-gradient(ellipse at 20% 70%,rgba(var(--pink-rgb),.65) 0%,transparent 52%),radial-gradient(ellipse at 75% 25%,rgba(var(--purple-rgb),.45) 0%,transparent 48%),linear-gradient(135deg,#250a1a 0%,#1a0a20 100%)}
+.bn-pi::after{content:'';position:absolute;top:-8px;left:42%;width:70px;height:70px;border-radius:50%;background:radial-gradient(circle,rgba(var(--pink-rgb),.45) 0%,transparent 70%)}
+.bn-cy{background:radial-gradient(ellipse at 30% 60%,rgba(var(--cyan-rgb),.65) 0%,transparent 52%),radial-gradient(ellipse at 80% 30%,rgba(var(--green-rgb),.35) 0%,transparent 48%),linear-gradient(135deg,#051820 0%,#0a1a15 100%)}
+.bn-cy::after{content:'';position:absolute;bottom:8px;left:8px;right:8px;height:35px;background:linear-gradient(90deg,transparent,rgba(var(--cyan-rgb),.35),transparent);filter:blur(7px)}
+.bn-gr{background:radial-gradient(ellipse at 40% 60%,rgba(var(--green-rgb),.65) 0%,transparent 52%),radial-gradient(ellipse at 75% 25%,rgba(var(--cyan-rgb),.35) 0%,transparent 48%),linear-gradient(135deg,#051a0a 0%,#05151e 100%)}
+.bn-go{background:radial-gradient(ellipse at 25% 75%,rgba(var(--gold-rgb),.65) 0%,transparent 52%),radial-gradient(ellipse at 70% 30%,rgba(247,115,22,.4) 0%,transparent 48%),linear-gradient(135deg,#1e1000 0%,#1a0e00 100%)}
+.bn-go::after{content:'';position:absolute;top:10px;right:10px;width:60px;height:60px;border-radius:50%;background:radial-gradient(circle,rgba(var(--gold-rgb),.4) 0%,transparent 70%)}
+.bn-week{background:linear-gradient(135deg,#0a0a1a,#121228);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px}
+.cbanner-label{position:absolute;bottom:9px;left:11px;right:11px;display:flex;align-items:flex-end;justify-content:space-between}
+.cbanner-title{font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:700;text-shadow:0 2px 8px rgba(0,0,0,.8);color:#fff}
+.cbanner-lv{font-size:10px;padding:2px 7px;border-radius:9px;font-weight:600;backdrop-filter:blur(4px)}
+.cbody{padding:11px}
+.csubtag{font-size:11px;color:var(--muted);margin-bottom:7px}
+.cprog-lbl{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-bottom:3px}
+.cmini{display:flex;gap:8px;margin-top:8px}
+.cmini span{font-size:10px;color:var(--muted);display:flex;align-items:center;gap:3px}
+.cmini strong{color:var(--text);font-size:11px}
+
+/* ── TWO-COL ── */
+.bottom-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+
+/* ── CLASS TABLE ── */
+.ct{width:100%;border-collapse:collapse;font-size:12px}
+.ct th{text-align:left;padding:6px 9px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);border-bottom:1px solid var(--b1)}
+.ct td{padding:7px 9px;border-bottom:1px solid var(--b1);vertical-align:middle}
+.ct tr:last-child td{border-bottom:none}
+.ct tr:hover td{background:var(--s3)}
+.ct .row-acts{display:flex;gap:4px;opacity:0;transition:opacity .15s}
+.ct tr:hover .row-acts{opacity:1}
+.spill{display:inline-flex;align-items:center;gap:5px;padding:3px 7px;border-radius:6px;font-size:11px;font-weight:600}
+.grade-chip{padding:2px 7px;border-radius:6px;font-size:11px;font-weight:700}
+.grade-a{background:rgba(var(--green-rgb),.15);color:var(--green-l);border:1px solid rgba(var(--green-rgb),.35)}
+.grade-b{background:rgba(var(--cyan-rgb),.15);color:var(--cyan-l);border:1px solid rgba(var(--cyan-rgb),.35)}
+.grade-c{background:rgba(var(--gold-rgb),.15);color:var(--gold-l);border:1px solid rgba(var(--gold-rgb),.35)}
+.grade-d{background:rgba(239,68,68,.15);color:#fca5a5;border:1px solid rgba(239,68,68,.35)}
+
+/* ── ASSIGNMENTS LIST ── */
+.assign-item{display:flex;align-items:center;gap:9px;padding:9px 11px;background:var(--s3);border:1px solid var(--b1);border-radius:var(--rs);transition:border-color .15s}
+.assign-item:hover{border-color:var(--b2)}
+.assign-item.done-assign{opacity:.55}
+.assign-bar{width:3px;height:36px;border-radius:2px;flex-shrink:0}
+.assign-info{flex:1}
+.assign-title{font-size:12px;font-weight:600}
+.assign-meta{font-size:10px;color:var(--muted);margin-top:2px}
+.due-chip{font-size:10px;padding:2px 7px;border-radius:6px;font-weight:600;white-space:nowrap;flex-shrink:0}
+.due-red{background:rgba(239,68,68,.18);color:#fca5a5;border:1px solid rgba(239,68,68,.35)}
+.due-go{background:rgba(var(--gold-rgb),.18);color:var(--gold-l);border:1px solid rgba(var(--gold-rgb),.35)}
+.due-cy{background:rgba(var(--cyan-rgb),.18);color:var(--cyan-l);border:1px solid rgba(var(--cyan-rgb),.35)}
+.due-gr{background:rgba(var(--green-rgb),.18);color:var(--green-l);border:1px solid rgba(var(--green-rgb),.35)}
+
+/* ── QUESTS ── */
+.quest-list{display:flex;flex-direction:column;gap:7px}
+.quest{display:flex;align-items:center;gap:9px;padding:9px 11px;background:var(--s3);border:1px solid var(--b1);border-radius:var(--rs);transition:border-color .15s}
+.quest:hover{border-color:var(--b2)}
+.quest .q-acts{display:flex;gap:2px;opacity:0;transition:opacity .15s}
+.quest:hover .q-acts{opacity:1}
+.qcheck{width:17px;height:17px;border-radius:4px;border:2px solid var(--b2);display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;transition:all .15s;font-size:9px}
+.qcheck.done{background:var(--green);border-color:var(--green);color:#fff}
+.qtext{flex:1;font-size:12px;font-weight:500}
+.qtext.done-text{color:var(--muted);text-decoration:line-through}
+.qxp{font-size:10px;font-weight:700;color:var(--gold-l);padding:2px 6px;background:rgba(var(--gold-rgb),.15);border-radius:8px}
+
+/* ── HABITS ── */
+.habits-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:11px}
+.habit{background:var(--s3);border:1px solid var(--b1);border-radius:var(--r);padding:13px;text-align:center;transition:border-color .15s}
+.habit:hover{border-color:var(--b2)}
+.habit-icon{font-size:26px;margin-bottom:6px}
+.habit-name{font-weight:600;font-size:12px;margin-bottom:3px}
+.habit-meta{font-size:10px;color:var(--muted);margin-bottom:9px}
+.habit-meta.fire{color:var(--gold-l)}
+.habit-acts{display:flex;gap:5px;margin-top:7px;justify-content:center}
+
+
+/* ── MODAL ── */
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;z-index:500;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-backdrop.open{opacity:1;pointer-events:all}
+.modal-box{background:var(--s2);border:1px solid var(--b2);border-radius:var(--rl);padding:22px;width:400px;max-width:calc(100vw - 32px);transform:translateY(10px);transition:transform .2s}
+.modal-backdrop.open .modal-box{transform:translateY(0)}
+.modal-title{font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;margin-bottom:14px}
+.modal-row{margin-bottom:10px;display:flex;flex-direction:column;gap:4px}
+.modal-row label{font-size:11px;color:var(--muted)}
+.modal-input{width:100%;padding:8px 10px;border-radius:var(--rs);background:var(--s3);border:1px solid var(--b1);color:var(--text);font-family:'Inter',sans-serif;font-size:13px}
+.modal-input:focus{outline:none;border-color:rgba(var(--purple-rgb),.6)}
+.modal-footer{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+.modal-row-inline{display:flex;gap:8px;margin-bottom:10px}
+.modal-row-inline .modal-row{flex:1;margin-bottom:0}
+.color-preview{width:38px;height:38px;border-radius:var(--rs);border:2px solid var(--b1);cursor:pointer;flex-shrink:0;align-self:flex-end}
+
+/* ── ASSIGNMENTS TAB ── */
+.assign-tab-grid{display:flex;flex-direction:column;gap:10px}
+.assign-full-item{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);transition:border-color .15s}
+.assign-full-item:hover{border-color:var(--b2)}
+.assign-full-item.done-assign{opacity:.55}
+.assign-full-info{flex:1}
+.assign-full-title{font-size:13px;font-weight:600;margin-bottom:2px}
+.assign-full-meta{font-size:11px;color:var(--muted)}
+.assign-full-actions{display:flex;gap:7px;align-items:center}
+
+/* ── REWARDS ── */
+.rewards-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px}
+.reward-card{background:var(--s2);border:1px solid var(--b1);border-radius:var(--r);padding:18px;text-align:center;transition:border-color .15s}
+.reward-card.unlocked{border-color:rgba(var(--gold-rgb),.4);background:rgba(var(--gold-rgb),.05)}
+.reward-card.locked{opacity:.45}
+.reward-icon{font-size:32px;margin-bottom:8px}
+.reward-name{font-weight:700;font-size:13px;margin-bottom:4px}
+.reward-desc{font-size:11px;color:var(--muted)}
+.reward-status{margin-top:8px;font-size:10px;font-weight:700;padding:3px 9px;border-radius:9px;display:inline-block}
+.reward-status.ok{background:rgba(var(--gold-rgb),.2);color:var(--gold-l)}
+.reward-status.no{background:var(--s3);color:var(--muted)}
+
+@keyframes xpFlash{0%{transform:scale(1)}50%{transform:scale(1.18)}100%{transform:scale(1)}}
+.xp-flash{animation:xpFlash .3s ease}
+
+@media(max-width:1100px){.cards-grid{grid-template-columns:repeat(2,1fr)}.bottom-grid{grid-template-columns:1fr}}
+@media(max-width:800px){.app{grid-template-columns:1fr}.sidebar{display:none}.cards-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<header class="topnav">
+  <div class="brand">
+    <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+      <polygon points="13,1 25,7 25,19 13,25 1,19 1,7" fill="url(#gg)"/>
+      <polygon points="13,5 21,9 21,17 13,21 5,17 5,9" fill="url(#gi)" opacity=".55"/>
+      <defs>
+        <linearGradient id="gg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#7c3aed"/><stop offset="100%" stop-color="#06b6d4"/></linearGradient>
+        <linearGradient id="gi" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#a78bfa"/><stop offset="100%" stop-color="#67e8f9"/></linearGradient>
+      </defs>
+    </svg>
+    <div><div class="brand-name">AURA</div></div>
+    <div class="brand-sub">Gamified Academic Planner</div>
+  </div>
+  <nav class="nav-tabs">
+    <button class="ntab active" data-tab="dashboard">Dashboard</button>
+    <button class="ntab" data-tab="assignments">Assignments</button>
+    <button class="ntab" data-tab="rewards">Rewards</button>
+  </nav>
+  <div class="nav-right">
+    <div class="xp-badge" id="nav-xp">⚡ <span id="nav-xp-val">0</span> XP</div>
+    <div class="nav-avatar">P</div>
+  </div>
+</header>
+
+<div class="app">
+  <aside class="sidebar">
+    <!-- Player Card -->
+    <div class="player-card">
+      <div class="player-banner"></div>
+      <div class="player-body">
+        <div class="p-avatar">🧑‍💻</div>
+        <div class="p-name-wrap">
+          <div class="p-name">Player One</div>
+          <div class="p-title" id="player-title">Scholar · Lv 12</div>
+        </div>
+        <div class="xp-labels"><span id="xp-cur-lbl">0 XP</span><span id="xp-next-lbl">Next: 1,500</span></div>
+        <div class="xp-bar"><div class="xp-fill" id="player-xp-bar" style="width:0%"></div></div>
+        <div class="p-stats">
+          <div class="pstat pu" id="stat-done">🏆 0 Done</div>
+          <div class="pstat cy" id="stat-streak">🔥 0-day</div>
+          <div class="pstat pi" id="stat-subj">📚 0 Subj</div>
+          <div class="pstat go">⭐ Rank 3</div>
+        </div>
+      </div>
+    </div>
+    <!-- XP Overview -->
+    <div class="card">
+      <div class="card-hd"><div class="card-title">XP Overview</div></div>
+      <div class="xp-grid">
+        <div class="xp-box"><div class="xp-val" style="color:var(--purple-l)" id="xp-total">0</div><div class="xp-lbl">Total</div></div>
+        <div class="xp-box"><div class="xp-val" style="color:var(--gold-l)" id="xp-today">0</div><div class="xp-lbl">Today</div></div>
+        <div class="xp-box"><div class="xp-val" style="color:var(--cyan-l)" id="xp-week">0</div><div class="xp-lbl">This Week</div></div>
+        <div class="xp-box"><div class="xp-val" style="color:var(--pink-l)" id="xp-month">0</div><div class="xp-lbl">This Month</div></div>
+      </div>
+    </div>
+    <!-- Skill Radar -->
+    <div class="card">
+      <div class="card-hd"><div class="card-title">Skill Radar</div></div>
+      <div class="radar-wrap">
+        <svg viewBox="-8 -8 216 216" class="radar-svg">
+          <defs><linearGradient id="rg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#7c3aed" stop-opacity=".55"/><stop offset="100%" stop-color="#06b6d4" stop-opacity=".35"/></linearGradient></defs>
+          <polygon points="100,30 166.6,78.4 141.2,156.6 58.8,156.6 33.4,78.4" fill="none" stroke="#1e1e38" stroke-width="1"/>
+          <polygon points="100,47.5 149.9,83.8 130.9,142.5 69.1,142.5 50.1,83.8" fill="none" stroke="#1e1e38" stroke-width="1"/>
+          <polygon points="100,65 133.3,89.2 120.6,128.3 79.4,128.3 66.7,89.2" fill="none" stroke="#1e1e38" stroke-width="1"/>
+          <polygon points="100,82.5 116.6,94.6 110.3,114.2 89.7,114.2 83.4,94.6" fill="none" stroke="#1e1e38" stroke-width="1"/>
+          <line x1="100" y1="100" x2="100" y2="30" stroke="#1e1e38" stroke-width="1"/>
+          <line x1="100" y1="100" x2="166.6" y2="78.4" stroke="#1e1e38" stroke-width="1"/>
+          <line x1="100" y1="100" x2="141.2" y2="156.6" stroke="#1e1e38" stroke-width="1"/>
+          <line x1="100" y1="100" x2="58.8" y2="156.6" stroke="#1e1e38" stroke-width="1"/>
+          <line x1="100" y1="100" x2="33.4" y2="78.4" stroke="#1e1e38" stroke-width="1"/>
+          <polygon points="100,40.5 146.6,84.8 124.7,134.0 69.1,142.5 56.7,85.9" fill="url(#rg)" stroke="#7c3aed" stroke-width="1.5"/>
+          <circle cx="100" cy="40.5" r="2.5" fill="#a78bfa"/><circle cx="146.6" cy="84.8" r="2.5" fill="#67e8f9"/>
+          <circle cx="124.7" cy="134.0" r="2.5" fill="#f9a8d4"/><circle cx="69.1" cy="142.5" r="2.5" fill="#86efac"/><circle cx="56.7" cy="85.9" r="2.5" fill="#fde68a"/>
+          <text x="100" y="20" text-anchor="middle" font-size="9" fill="#64748b" font-family="Inter,sans-serif">Intel</text>
+          <text x="178" y="82" text-anchor="start" font-size="9" fill="#64748b" font-family="Inter,sans-serif">Dilig</text>
+          <text x="150" y="170" text-anchor="middle" font-size="9" fill="#64748b" font-family="Inter,sans-serif">Creat</text>
+          <text x="50" y="170" text-anchor="middle" font-size="9" fill="#64748b" font-family="Inter,sans-serif">Focus</text>
+          <text x="22" y="82" text-anchor="end" font-size="9" fill="#64748b" font-family="Inter,sans-serif">Endur</text>
+        </svg>
+      </div>
+    </div>
+    <!-- Subjects -->
+    <div class="card">
+      <div class="card-hd">
+        <div class="card-title">Subjects</div>
+        <button class="btn ghost sm" id="btn-add-subject">＋ Add</button>
+      </div>
+      <div id="sidebar-subjects"></div>
+    </div>
+    <!-- Progress -->
+    <div class="card">
+      <div class="card-hd"><div class="card-title">Progress</div></div>
+      <div class="prog-list">
+        <div class="prog-row"><div class="prog-lbl">Year</div><div class="prog-track"><div class="prog-fill" style="width:29%;background:linear-gradient(90deg,#7c3aed,#a78bfa)"></div></div><div class="prog-pct">29%</div></div>
+        <div class="prog-row"><div class="prog-lbl">Month</div><div class="prog-track"><div class="prog-fill" style="width:50%;background:linear-gradient(90deg,#06b6d4,#67e8f9)"></div></div><div class="prog-pct">50%</div></div>
+        <div class="prog-row"><div class="prog-lbl">Week</div><div class="prog-track"><div class="prog-fill" style="width:57%;background:linear-gradient(90deg,#22c55e,#86efac)"></div></div><div class="prog-pct">57%</div></div>
+      </div>
+    </div>
+    <!-- Habit Streaks -->
+    <div class="card">
+      <div class="card-hd"><div class="card-title">Habit Streaks</div></div>
+      <div id="sidebar-streaks" style="display:flex;flex-direction:column;gap:7px"></div>
+    </div>
+  </aside>
+
+  <main class="main">
+
+    <!-- ══ DASHBOARD ══ -->
+    <div id="panel-dashboard" style="display:flex;flex-direction:column;gap:16px">
+      <div class="tags-row" id="tag-pills"></div>
+
+      <div style="display:grid;grid-template-columns:1fr 268px;gap:14px">
+        <!-- Subject Cards -->
+        <div>
+          <div class="sec-hd">
+            <div class="sec-title"><div class="sec-icon ic-pu">📘</div>Subjects Overview</div>
+          </div>
+          <div class="cards-grid" id="subjects-cards-grid"></div>
+        </div>
+
+        <!-- Quests -->
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div class="sec-hd" style="margin-bottom:0">
+            <div class="sec-title"><div class="sec-icon ic-go">⚔️</div>Daily Quests</div>
+            <button class="btn ghost sm" id="btn-add-quest">+ Add</button>
+          </div>
+          <div class="quest-list" id="quest-list"></div>
+        </div>
+      </div>
+
+      <!-- Class Overview + Upcoming Assignments -->
+      <div class="bottom-grid">
+        <div class="card">
+          <div class="sec-hd">
+            <div class="sec-title"><div class="sec-icon ic-cy">📋</div>Class Overview</div>
+            <button class="btn ghost sm" id="btn-add-subject-co">＋ Add Subject</button>
+          </div>
+          <table class="ct">
+            <thead><tr><th>Subject</th><th>Cr.</th><th>Grade</th><th>Done / Total</th><th>Status</th><th></th></tr></thead>
+            <tbody id="class-overview-body"></tbody>
+          </table>
+        </div>
+        <div class="card">
+          <div class="sec-hd">
+            <div class="sec-title"><div class="sec-icon ic-pu">📘</div>Upcoming Assignments</div>
+            <button class="btn ghost sm" id="btn-add-assign">+ Add</button>
+          </div>
+          <div id="upcoming-list" style="display:flex;flex-direction:column;gap:7px"></div>
+        </div>
+      </div>
+
+      <!-- Daily Habits -->
+      <div class="card">
+        <div class="sec-hd">
+          <div class="sec-title"><div class="sec-icon ic-gr">🔥</div>Daily Habits</div>
+          <button class="btn ghost sm" id="btn-add-habit">+ Add Habit</button>
+        </div>
+        <div class="habits-grid" id="habit-grid"></div>
+      </div>
+    </div>
+
+    <!-- ══ ASSIGNMENTS PANEL ══ -->
+    <div id="panel-assignments" style="display:none">
+      <div class="sec-hd">
+        <div class="sec-title"><div class="sec-icon ic-pu">📘</div>All Assignments</div>
+        <button class="btn primary" id="btn-add-assign-tab">+ New Assignment</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:14px">
+        <button class="btn" id="filter-pending" style="border-color:rgba(var(--purple-rgb),.5);color:var(--purple-l)">Pending</button>
+        <button class="btn ghost" id="filter-done-assign">Completed</button>
+      </div>
+      <div class="assign-tab-grid" id="assign-full-list"></div>
+    </div>
+
+    <!-- ══ REWARDS PANEL ══ -->
+    <div id="panel-rewards" style="display:none">
+      <div class="sec-hd"><div class="sec-title"><div class="sec-icon ic-go">🏆</div>Achievements & Rewards</div></div>
+      <div class="rewards-grid" id="rewards-grid"></div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ── QUEST MODAL (add / edit) ── -->
+<div class="modal-backdrop" id="modal-quest">
+  <div class="modal-box">
+    <div class="modal-title" id="quest-modal-title">⚔️ Add Daily Quest</div>
+    <div class="modal-row"><label>Quest Title</label><input class="modal-input" id="quest-title-input" placeholder="e.g. Read chapter 5"/></div>
+    <div class="modal-row"><label>XP Reward</label>
+      <select class="modal-input" id="quest-xp-input">
+        <option value="10">10 XP — Quick</option>
+        <option value="25" selected>25 XP — Normal</option>
+        <option value="50">50 XP — Hard</option>
+        <option value="100">100 XP — Epic</option>
+      </select>
+    </div>
+    <div class="modal-footer">
+      <button class="btn ghost" id="modal-quest-cancel">Cancel</button>
+      <button class="btn primary" id="modal-quest-save">Add Quest</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── ASSIGNMENT MODAL (add / edit) ── -->
+<div class="modal-backdrop" id="modal-assign">
+  <div class="modal-box">
+    <div class="modal-title" id="assign-modal-title">📘 Add Assignment</div>
+    <div class="modal-row"><label>Title</label><input class="modal-input" id="assign-title-input" placeholder="e.g. Homework 3"/></div>
+    <div class="modal-row"><label>Subject</label><select class="modal-input" id="assign-subj-input"></select></div>
+    <div class="modal-row-inline">
+      <div class="modal-row"><label>Due Date</label><input class="modal-input" id="assign-due-input" type="date"/></div>
+      <div class="modal-row"><label>XP Reward</label>
+        <select class="modal-input" id="assign-xp-input">
+          <option value="25">25 XP</option><option value="50" selected>50 XP</option>
+          <option value="100">100 XP</option><option value="200">200 XP</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn ghost" id="modal-assign-cancel">Cancel</button>
+      <button class="btn primary" id="modal-assign-save">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── SUBJECT MODAL (add / edit) ── -->
+<div class="modal-backdrop" id="modal-subject">
+  <div class="modal-box">
+    <div class="modal-title" id="subject-modal-title">📚 Add Subject</div>
+    <div class="modal-row"><label>Subject Name</label><input class="modal-input" id="subj-name-input" placeholder="e.g. Data Structures"/></div>
+    <div class="modal-row-inline">
+      <div class="modal-row"><label>Credits</label>
+        <select class="modal-input" id="subj-credits-input">
+          <option value="1">1</option><option value="2">2</option><option value="3" selected>3</option>
+          <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+        </select>
+      </div>
+      <div class="modal-row"><label>Grade</label>
+        <select class="modal-input" id="subj-grade-input">
+          <option value="A" selected>A</option><option value="A-">A-</option>
+          <option value="B+">B+</option><option value="B">B</option><option value="B-">B-</option>
+          <option value="C+">C+</option><option value="C">C</option>
+          <option value="D">D</option><option value="F">F</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-row"><label>Status</label>
+      <select class="modal-input" id="subj-status-input">
+        <option value="On Track">On Track</option><option value="Active">Active</option>
+        <option value="Review">Review</option><option value="Focus">Focus</option>
+        <option value="At Risk">At Risk</option>
+      </select>
+    </div>
+    <div class="modal-row">
+      <label>Color</label>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <input type="color" class="modal-input" id="subj-color-input" style="width:48px;height:38px;padding:2px;cursor:pointer"/>
+        <div style="display:flex;gap:6px;flex-wrap:wrap" id="color-swatches"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn ghost" id="modal-subject-cancel">Cancel</button>
+      <button class="btn primary" id="modal-subject-save">Save Subject</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── HABIT MODAL (add / edit) ── -->
+<div class="modal-backdrop" id="modal-habit">
+  <div class="modal-box">
+    <div class="modal-title" id="habit-modal-title">🔥 Add Habit</div>
+    <div class="modal-row-inline">
+      <div class="modal-row"><label>Icon (emoji)</label><input class="modal-input" id="habit-icon-input" placeholder="😴" style="font-size:18px"/></div>
+      <div class="modal-row"><label>XP Reward</label>
+        <select class="modal-input" id="habit-xp-input">
+          <option value="10">10 XP</option><option value="25" selected>25 XP</option>
+          <option value="50">50 XP</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-row"><label>Habit Name</label><input class="modal-input" id="habit-name-input" placeholder="e.g. Exercise 30 min"/></div>
+    <div class="modal-footer">
+      <button class="btn ghost" id="modal-habit-cancel">Cancel</button>
+      <button class="btn primary" id="modal-habit-save">Save Habit</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════════
+const STORAGE_KEY = 'aura_ui_state_v4';
+
+const COLOR_SWATCHES = ['#7c3aed','#ec4899','#06b6d4','#22c55e','#f59e0b','#f97316','#ef4444','#8b5cf6','#0ea5e9','#10b981'];
+
+const STATUS_TAG = { 'On Track':'cy', 'Active':'gr', 'Review':'go', 'Focus':'pu', 'At Risk':'or' };
+
+const DEFAULT_STATE = {
+  xp: { total: 0, today: 0, week: 0, month: 0 },
+  lastDate: null,
+  subjects: [],
+  quests: [],
+  habits: [],
+  assignments: [],
+  nextId: 1,
+};
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const s = JSON.parse(raw);
+      // migrate: ensure subjects exist
+      if (!s.subjects) s.subjects = DEFAULT_STATE.subjects;
+      // migrate: ensure assignments use subjectId
+      if (s.assignments && s.assignments[0] && s.assignments[0].subject !== undefined && s.assignments[0].subjectId === undefined) {
+        // old format had .subject (string) and .color — convert
+        s.assignments.forEach(a => {
+          if (a.subjectId === undefined) {
+            const found = s.subjects.find(x => x.name === a.subject);
+            a.subjectId = found ? found.id : (s.subjects[0] ? s.subjects[0].id : 1);
+            delete a.subject; delete a.color;
+          }
+        });
+      }
+      return s;
+    }
+  } catch(e) {}
+  return JSON.parse(JSON.stringify(DEFAULT_STATE));
+}
+
+function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+let state = loadState();
+
+// ── Helpers ──
+function subjById(id) { return state.subjects.find(s => s.id === id) || { name:'Unknown', color:'#555', grade:'-', status:'—', credits:0 }; }
+function todayStr() { return new Date().toISOString().slice(0, 10); }
+function escH(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+function getWeekNumber(d) {
+  const dt = new Date(d); dt.setHours(0,0,0,0);
+  dt.setDate(dt.getDate() + 3 - (dt.getDay() + 6) % 7);
+  const w1 = new Date(dt.getFullYear(), 0, 4);
+  return 1 + Math.round(((dt - w1) / 86400000 - 3 + (w1.getDay() + 6) % 7) / 7);
+}
+
+// Daily reset
+(function dailyReset() {
+  const today = todayStr();
+  if (state.lastDate !== today) {
+    if (state.lastDate) {
+      const last = new Date(state.lastDate), now = new Date(today);
+      state.xp.today = 0;
+      if (getWeekNumber(last) !== getWeekNumber(now)) state.xp.week = 0;
+      if (last.getMonth() !== now.getMonth() || last.getFullYear() !== now.getFullYear()) state.xp.month = 0;
+    }
+    state.habits.forEach(h => h.doneToday = false);
+    state.quests.forEach(q => q.done = false);
+    state.lastDate = today;
+    saveState();
+  }
+})();
+
+// ── XP ──
+function earnXP(n) { state.xp.total+=n; state.xp.today+=n; state.xp.week+=n; state.xp.month+=n; saveState(); updateAllXP(); flashXP(); }
+function loseXP(n) { ['total','today','week','month'].forEach(k => state.xp[k]=Math.max(0,state.xp[k]-n)); saveState(); updateAllXP(); }
+
+function updateAllXP() {
+  const t = state.xp.total;
+  document.getElementById('nav-xp-val').textContent = t.toLocaleString();
+  document.getElementById('xp-total').textContent = t.toLocaleString();
+  document.getElementById('xp-today').textContent = state.xp.today.toLocaleString();
+  document.getElementById('xp-week').textContent  = state.xp.week.toLocaleString();
+  document.getElementById('xp-month').textContent = state.xp.month.toLocaleString();
+  const level = Math.floor(t/100)+1;
+  document.getElementById('player-xp-bar').style.width = Math.min(100,((t-(level-1)*100)/100)*100)+'%';
+  document.getElementById('xp-cur-lbl').textContent = t.toLocaleString()+' XP';
+  document.getElementById('xp-next-lbl').textContent = 'Next: '+(level*100).toLocaleString();
+  document.getElementById('player-title').textContent = 'Scholar · Lv '+level;
+  const doneCount = state.quests.filter(q=>q.done).length + state.assignments.filter(a=>a.done).length;
+  document.getElementById('stat-done').textContent = '🏆 '+doneCount+' Done';
+  const maxStreak = state.habits.reduce((m,h)=>Math.max(m,h.streak),0);
+  document.getElementById('stat-streak').textContent = '🔥 '+maxStreak+'-day';
+  document.getElementById('stat-subj').textContent = '📚 '+state.subjects.length+' Subj';
+  if (activeTab==='rewards') renderRewards();
+}
+
+function flashXP() {
+  const el = document.getElementById('nav-xp');
+  el.classList.remove('xp-flash'); void el.offsetWidth; el.classList.add('xp-flash');
+}
+
+// ── Tabs ──
+let activeTab = 'dashboard';
+document.querySelectorAll('.ntab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    activeTab = btn.dataset.tab;
+    document.querySelectorAll('.ntab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-dashboard').style.display   = activeTab==='dashboard'   ? '' : 'none';
+    document.getElementById('panel-assignments').style.display = activeTab==='assignments' ? '' : 'none';
+    document.getElementById('panel-rewards').style.display     = activeTab==='rewards'     ? '' : 'none';
+    if (activeTab==='assignments') renderAssignFull();
+    if (activeTab==='rewards') renderRewards();
+  });
+});
+
+// ═══════════════════════════════════════════════════════
+//  SUBJECTS
+// ═══════════════════════════════════════════════════════
+let editingSubjectId = null;
+
+function gradeClass(g) {
+  if (!g) return 'grade-a';
+  const first = g[0].toUpperCase();
+  if (first==='A') return 'grade-a';
+  if (first==='B') return 'grade-b';
+  if (first==='C') return 'grade-c';
+  return 'grade-d';
+}
+
+function renderSubjectsSidebar() {
+  const box = document.getElementById('sidebar-subjects');
+  box.innerHTML = '';
+  state.subjects.forEach(s => {
+    const assignCount = state.assignments.filter(a => a.subjectId === s.id).length;
+    const el = document.createElement('div');
+    el.className = 'subj-item';
+    el.innerHTML = `
+      <div class="sdot" style="background:${s.color}"></div>
+      <div class="sname">${escH(s.name)}</div>
+      <div class="scnt">${assignCount}</div>
+      <div class="subj-acts">
+        <button class="btn ghost icon" title="Edit">✎</button>
+        <button class="btn ghost icon danger" title="Delete">✕</button>
+      </div>
+    `;
+    el.querySelectorAll('button')[0].addEventListener('click', e => { e.stopPropagation(); openEditSubject(s.id); });
+    el.querySelectorAll('button')[1].addEventListener('click', e => { e.stopPropagation(); deleteSubject(s.id); });
+    box.appendChild(el);
+  });
+}
+
+function renderTagPills() {
+  const row = document.getElementById('tag-pills');
+  row.innerHTML = '';
+  const tagClasses = ['pu','pi','cy','gr','go','or'];
+  const emojis = ['🔷','🔺','🔹','🟢','⭐','🔶'];
+  state.subjects.forEach((s, i) => {
+    const cls = tagClasses[i % tagClasses.length];
+    const em  = emojis[i % emojis.length];
+    const span = document.createElement('span');
+    span.className = `tag ${cls}`;
+    span.textContent = `${em} ${s.name}`;
+    row.appendChild(span);
+  });
+}
+
+function renderClassOverview() {
+  const tbody = document.getElementById('class-overview-body');
+  tbody.innerHTML = '';
+  if (state.subjects.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:16px">No subjects yet — add one above.</td></tr>';
+    return;
+  }
+  state.subjects.forEach(s => {
+    const allA = state.assignments.filter(a => a.subjectId === s.id);
+    const doneA = allA.filter(a => a.done).length;
+    const tagCls = STATUS_TAG[s.status] || 'cy';
+    const gc = gradeClass(s.grade);
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td><div class="spill" style="background:${s.color}22;color:${s.color}">${escH(s.name)}</div></td>
+      <td style="color:var(--muted)">${s.credits}</td>
+      <td><span class="grade-chip ${gc}">${escH(s.grade)}</span></td>
+      <td style="color:var(--muted);font-size:11px">${doneA} / ${allA.length}</td>
+      <td><span class="tag ${tagCls}" style="font-size:10px;padding:1px 7px">${escH(s.status)}</span></td>
+      <td><div class="row-acts">
+        <button class="btn ghost icon" title="Edit">✎</button>
+        <button class="btn ghost icon danger" title="Delete">✕</button>
+      </div></td>
+    `;
+    row.querySelectorAll('button')[0].addEventListener('click', () => openEditSubject(s.id));
+    row.querySelectorAll('button')[1].addEventListener('click', () => deleteSubject(s.id));
+    tbody.appendChild(row);
+  });
+}
+
+function buildSubjectSelect() {
+  const sel = document.getElementById('assign-subj-input');
+  sel.innerHTML = '';
+  state.subjects.forEach(s => {
+    const o = document.createElement('option');
+    o.value = s.id;
+    o.textContent = s.name;
+    sel.appendChild(o);
+  });
+}
+
+function lightenColor(hex) {
+  if (!hex || hex.length < 7) return '#a78bfa';
+  const r = Math.min(255, parseInt(hex.slice(1,3),16)+70);
+  const g = Math.min(255, parseInt(hex.slice(3,5),16)+70);
+  const b = Math.min(255, parseInt(hex.slice(5,7),16)+70);
+  return `rgb(${r},${g},${b})`;
+}
+
+function renderSubjectCards() {
+  const grid = document.getElementById('subjects-cards-grid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  if (state.subjects.length === 0) {
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--muted);padding:48px 16px;font-size:13px">No subjects yet — click <strong style="color:var(--text)">＋ Add</strong> in the Subjects panel to get started.</div>';
+    return;
+  }
+  state.subjects.forEach(s => {
+    const allA     = state.assignments.filter(a => a.subjectId === s.id);
+    const doneA    = allA.filter(a => a.done);
+    const pct      = allA.length > 0 ? Math.round((doneA.length / allA.length) * 100) : 0;
+    const earnedXP = doneA.reduce((sum, a) => sum + (a.xp||50), 0);
+    const level    = Math.floor(earnedXP / 100) + 1;
+    const pending  = allA.filter(a => !a.done).sort((a,b) => new Date(a.dueDate) - new Date(b.dueDate));
+    const nextDue  = pending.length ? fmtDate(pending[0].dueDate) : '—';
+    const hex = s.color || '#7c3aed';
+    const r = parseInt(hex.slice(1,3),16)||124;
+    const g = parseInt(hex.slice(3,5),16)||58;
+    const b = parseInt(hex.slice(5,7),16)||237;
+    const rgb = `${r},${g},${b}`;
+    const bannerBg = `radial-gradient(ellipse at 15% 85%,rgba(${rgb},.65) 0%,transparent 52%),radial-gradient(ellipse at 85% 15%,rgba(${rgb},.4) 0%,transparent 48%),linear-gradient(135deg,#12082a 0%,#08081a 60%,#081228 100%)`;
+    const lvStyle  = `background:rgba(${rgb},.35);color:${hex};border:1px solid rgba(${rgb},.5)`;
+    const fillStyle= `width:${pct}%;background:linear-gradient(90deg,${hex},${lightenColor(hex)})`;
+    const card = document.createElement('div');
+    card.className = 'bcard';
+    card.innerHTML = `
+      <div class="cbanner" style="background:${bannerBg}">
+        <div class="cbanner-label">
+          <div class="cbanner-title">${escH(s.name)}</div>
+          <div class="cbanner-lv" style="${lvStyle}">LV.${level}</div>
+        </div>
+      </div>
+      <div class="cbody">
+        <div class="csubtag">${allA.length} assignment${allA.length!==1?'s':''} · ${doneA.length} done</div>
+        <div class="cprog-lbl"><span>Progress</span><span style="color:${hex}">${pct}%</span></div>
+        <div class="xp-bar"><div class="xp-fill" style="${fillStyle}"></div></div>
+        <div class="cmini"><span>📅 <strong>${nextDue}</strong></span><span>⭐ <strong>${earnedXP} XP</strong></span></div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function openAddSubject() {
+  editingSubjectId = null;
+  document.getElementById('subject-modal-title').textContent = '📚 Add Subject';
+  document.getElementById('subj-name-input').value = '';
+  document.getElementById('subj-credits-input').value = '3';
+  document.getElementById('subj-grade-input').value = 'A';
+  document.getElementById('subj-status-input').value = 'On Track';
+  document.getElementById('subj-color-input').value = COLOR_SWATCHES[0];
+  openModal('modal-subject');
+}
+
+function openEditSubject(id) {
+  editingSubjectId = id;
+  const s = subjById(id);
+  document.getElementById('subject-modal-title').textContent = '✎ Edit Subject';
+  document.getElementById('subj-name-input').value = s.name;
+  document.getElementById('subj-credits-input').value = s.credits;
+  document.getElementById('subj-grade-input').value = s.grade;
+  document.getElementById('subj-status-input').value = s.status;
+  document.getElementById('subj-color-input').value = s.color;
+  openModal('modal-subject');
+}
+
+function saveSubject() {
+  const name    = document.getElementById('subj-name-input').value.trim();
+  const credits = parseInt(document.getElementById('subj-credits-input').value) || 3;
+  const grade   = document.getElementById('subj-grade-input').value;
+  const status  = document.getElementById('subj-status-input').value;
+  const color   = document.getElementById('subj-color-input').value;
+  if (!name) return;
+  if (editingSubjectId) {
+    const s = state.subjects.find(x => x.id === editingSubjectId);
+    if (s) Object.assign(s, { name, credits, grade, status, color });
+  } else {
+    state.subjects.push({ id: state.nextId++, name, credits, grade, status, color });
+  }
+  saveState(); closeModal('modal-subject');
+  renderSubjectsSidebar(); renderTagPills(); renderClassOverview(); renderSubjectCards(); buildSubjectSelect();
+}
+
+function deleteSubject(id) {
+  const s = state.subjects.find(x => x.id === id);
+  if (!s) return;
+  if (!confirm(`Delete "${s.name}" and its ${state.assignments.filter(a=>a.subjectId===id).length} assignments?`)) return;
+  // deduct XP for completed assignments of this subject
+  state.assignments.filter(a => a.subjectId===id && a.done).forEach(a => loseXP(a.xp||50));
+  state.assignments = state.assignments.filter(a => a.subjectId !== id);
+  state.subjects = state.subjects.filter(x => x.id !== id);
+  saveState();
+  renderSubjectsSidebar(); renderTagPills(); renderClassOverview(); renderSubjectCards(); buildSubjectSelect(); renderUpcoming();
+  if (activeTab==='assignments') renderAssignFull();
+}
+
+document.getElementById('btn-add-subject').addEventListener('click', openAddSubject);
+document.getElementById('btn-add-subject-co').addEventListener('click', openAddSubject);
+document.getElementById('modal-subject-cancel').addEventListener('click', () => closeModal('modal-subject'));
+document.getElementById('modal-subject-save').addEventListener('click', saveSubject);
+
+// Color swatches
+(function buildSwatches() {
+  const box = document.getElementById('color-swatches');
+  COLOR_SWATCHES.forEach(c => {
+    const sw = document.createElement('div');
+    sw.style.cssText = `width:22px;height:22px;border-radius:5px;background:${c};cursor:pointer;border:2px solid transparent;transition:border-color .15s`;
+    sw.addEventListener('click', () => { document.getElementById('subj-color-input').value = c; });
+    sw.addEventListener('mouseenter', () => sw.style.borderColor = '#fff4');
+    sw.addEventListener('mouseleave', () => sw.style.borderColor = 'transparent');
+    box.appendChild(sw);
+  });
+})();
+
+// ═══════════════════════════════════════════════════════
+//  QUESTS
+// ═══════════════════════════════════════════════════════
+let editingQuestId = null;
+
+function renderQuests() {
+  const list = document.getElementById('quest-list');
+  list.innerHTML = '';
+  state.quests.forEach(q => {
+    const el = document.createElement('div');
+    el.className = 'quest';
+    el.innerHTML = `
+      <div class="qcheck${q.done?' done':''}">${q.done?'✓':''}</div>
+      <div class="qtext${q.done?' done-text':''}">${escH(q.text)}</div>
+      <div class="qxp">+${q.xp}</div>
+      <div class="q-acts">
+        <button class="btn ghost icon" title="Edit">✎</button>
+        <button class="btn ghost icon danger" title="Remove">✕</button>
+      </div>
+    `;
+    el.querySelector('.qcheck').addEventListener('click', () => toggleQuest(q.id));
+    const [editBtn, delBtn] = el.querySelectorAll('.q-acts button');
+    editBtn.addEventListener('click', () => openEditQuest(q.id));
+    delBtn.addEventListener('click',  () => deleteQuest(q.id));
+    list.appendChild(el);
+  });
+}
+
+function toggleQuest(id) {
+  const q = state.quests.find(x=>x.id===id); if (!q) return;
+  if (q.done) { q.done=false; loseXP(q.xp); } else { q.done=true; earnXP(q.xp); }
+  saveState(); renderQuests();
+}
+
+function openEditQuest(id) {
+  editingQuestId = id;
+  const q = state.quests.find(x=>x.id===id); if (!q) return;
+  document.getElementById('quest-modal-title').textContent = '✎ Edit Quest';
+  document.getElementById('quest-title-input').value = q.text;
+  document.getElementById('quest-xp-input').value = String(q.xp);
+  document.getElementById('modal-quest-save').textContent = 'Save Quest';
+  openModal('modal-quest');
+}
+
+function deleteQuest(id) {
+  const q = state.quests.find(x=>x.id===id); if (!q) return;
+  if (q.done) loseXP(q.xp);
+  state.quests = state.quests.filter(x=>x.id!==id);
+  saveState(); renderQuests();
+}
+
+function saveQuest() {
+  const text = document.getElementById('quest-title-input').value.trim(); if (!text) return;
+  const xp   = parseInt(document.getElementById('quest-xp-input').value) || 25;
+  if (editingQuestId) {
+    const q = state.quests.find(x=>x.id===editingQuestId);
+    if (q) { q.text=text; q.xp=xp; }
+  } else {
+    state.quests.push({ id:state.nextId++, text, xp, done:false });
+  }
+  saveState(); renderQuests(); closeModal('modal-quest');
+  editingQuestId = null;
+}
+
+document.getElementById('btn-add-quest').addEventListener('click', () => {
+  editingQuestId = null;
+  document.getElementById('quest-modal-title').textContent = '⚔️ Add Daily Quest';
+  document.getElementById('quest-title-input').value = '';
+  document.getElementById('quest-xp-input').value = '25';
+  document.getElementById('modal-quest-save').textContent = 'Add Quest';
+  openModal('modal-quest');
+});
+document.getElementById('modal-quest-cancel').addEventListener('click', () => { closeModal('modal-quest'); editingQuestId=null; });
+document.getElementById('modal-quest-save').addEventListener('click', saveQuest);
+document.getElementById('quest-title-input').addEventListener('keydown', e => { if (e.key==='Enter') saveQuest(); });
+
+// ═══════════════════════════════════════════════════════
+//  HABITS
+// ═══════════════════════════════════════════════════════
+let editingHabitId = null;
+
+function renderHabits() {
+  const grid = document.getElementById('habit-grid');
+  grid.innerHTML = '';
+  state.habits.forEach(h => {
+    const card = document.createElement('div');
+    card.className = 'habit';
+    const fireClass = h.streak>0?' fire':'';
+    const streakLabel = h.streak>0 ? `🔥 ${h.streak}-day streak · ${h.xp} XP` : `0-day streak · ${h.xp} XP`;
+    card.innerHTML = `
+      <div class="habit-icon">${h.icon}</div>
+      <div class="habit-name">${escH(h.name)}</div>
+      <div class="habit-meta${fireClass}">${streakLabel}</div>
+      <button class="btn ${h.doneToday?'done-btn':''}" style="width:100%;font-size:11px">${h.doneToday?'✓ Completed':'Mark as done'}</button>
+      <div class="habit-acts">
+        <button class="btn ghost sm" title="Edit">✎ Edit</button>
+        <button class="btn ghost sm danger" title="Delete">✕</button>
+      </div>
+    `;
+    const [doneBtn, editBtn, delBtn] = card.querySelectorAll('button');
+    doneBtn.addEventListener('click', () => toggleHabit(h.id));
+    editBtn.addEventListener('click', () => openEditHabit(h.id));
+    delBtn.addEventListener('click',  () => deleteHabit(h.id));
+    grid.appendChild(card);
+  });
+  renderStreaks();
+}
+
+function toggleHabit(id) {
+  const h = state.habits.find(x=>x.id===id); if (!h) return;
+  if (h.doneToday) { h.doneToday=false; h.streak=Math.max(0,h.streak-1); loseXP(h.xp); }
+  else             { h.doneToday=true;  h.streak+=1;                       earnXP(h.xp); }
+  saveState(); renderHabits();
+}
+
+function openEditHabit(id) {
+  editingHabitId = id;
+  const h = state.habits.find(x=>x.id===id); if (!h) return;
+  document.getElementById('habit-modal-title').textContent = '✎ Edit Habit';
+  document.getElementById('habit-icon-input').value = h.icon;
+  document.getElementById('habit-name-input').value = h.name;
+  document.getElementById('habit-xp-input').value   = String(h.xp);
+  document.getElementById('modal-habit-save').textContent = 'Save Habit';
+  openModal('modal-habit');
+}
+
+function deleteHabit(id) {
+  const h = state.habits.find(x=>x.id===id); if (!h) return;
+  if (!confirm(`Delete habit "${h.name}"?`)) return;
+  if (h.doneToday) loseXP(h.xp);
+  state.habits = state.habits.filter(x=>x.id!==id);
+  saveState(); renderHabits();
+}
+
+function saveHabit() {
+  const icon = document.getElementById('habit-icon-input').value.trim() || '⭐';
+  const name = document.getElementById('habit-name-input').value.trim(); if (!name) return;
+  const xp   = parseInt(document.getElementById('habit-xp-input').value) || 25;
+  if (editingHabitId) {
+    const h = state.habits.find(x=>x.id===editingHabitId);
+    if (h) { h.icon=icon; h.name=name; h.xp=xp; }
+  } else {
+    state.habits.push({ id:state.nextId++, icon, name, xp, streak:0, doneToday:false });
+  }
+  saveState(); renderHabits(); closeModal('modal-habit'); editingHabitId=null;
+}
+
+document.getElementById('btn-add-habit').addEventListener('click', () => {
+  editingHabitId = null;
+  document.getElementById('habit-modal-title').textContent = '🔥 Add Habit';
+  document.getElementById('habit-icon-input').value = '';
+  document.getElementById('habit-name-input').value = '';
+  document.getElementById('habit-xp-input').value   = '25';
+  document.getElementById('modal-habit-save').textContent = 'Add Habit';
+  openModal('modal-habit');
+});
+document.getElementById('modal-habit-cancel').addEventListener('click', () => { closeModal('modal-habit'); editingHabitId=null; });
+document.getElementById('modal-habit-save').addEventListener('click', saveHabit);
+document.getElementById('habit-name-input').addEventListener('keydown', e => { if (e.key==='Enter') saveHabit(); });
+
+function renderStreaks() {
+  const box = document.getElementById('sidebar-streaks');
+  box.innerHTML = '';
+  state.habits.forEach(h => {
+    const el = document.createElement('div');
+    el.className = 'streak-item';
+    el.innerHTML = `<div class="strk-icon">${h.icon}</div><div class="strk-info"><div class="strk-name">${escH(h.name)}</div><div class="strk-days">${h.streak}-day streak</div></div><div class="strk-num">${h.streak}</div>`;
+    box.appendChild(el);
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+//  ASSIGNMENTS
+// ═══════════════════════════════════════════════════════
+let editingAssignId = null;
+let assignFilter    = 'pending';
+
+function daysUntil(str) {
+  if (!str) return null;
+  const now = new Date(); now.setHours(0,0,0,0);
+  return Math.ceil((new Date(str) - now) / 86400000);
+}
+function dueChip(days) {
+  if (days===null)  return { cls:'due-cy', lbl:'—' };
+  if (days<0)       return { cls:'due-red', lbl:Math.abs(days)+'d overdue' };
+  if (days===0)     return { cls:'due-red', lbl:'Today' };
+  if (days<=3)      return { cls:'due-red', lbl:days+' days' };
+  if (days<=7)      return { cls:'due-go',  lbl:days+' days' };
+  if (days<=14)     return { cls:'due-cy',  lbl:days+' days' };
+  return { cls:'due-gr', lbl:days+' days' };
+}
+function fmtDate(str) {
+  if (!str) return '—';
+  return new Date(str+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});
+}
+
+function markAssignDone(id) {
+  const a = state.assignments.find(x=>x.id===id); if (!a||a.done) return;
+  a.done=true; earnXP(a.xp||50); saveState();
+  renderUpcoming(); renderClassOverview(); renderSubjectCards(); renderSubjectsSidebar();
+  if (activeTab==='assignments') renderAssignFull();
+}
+function undoAssign(id) {
+  const a = state.assignments.find(x=>x.id===id); if (!a||!a.done) return;
+  a.done=false; loseXP(a.xp||50); saveState();
+  renderUpcoming(); renderClassOverview(); renderSubjectCards(); renderSubjectsSidebar();
+  if (activeTab==='assignments') renderAssignFull();
+}
+function deleteAssign(id) {
+  if (!confirm('Delete this assignment?')) return;
+  const a = state.assignments.find(x=>x.id===id);
+  if (a && a.done) loseXP(a.xp||50);
+  state.assignments = state.assignments.filter(x=>x.id!==id);
+  saveState(); renderUpcoming(); renderClassOverview(); renderSubjectCards(); renderSubjectsSidebar();
+  if (activeTab==='assignments') renderAssignFull();
+}
+
+function openAssignModal(id) {
+  if (!state.subjects.length) { alert('Add a subject first before creating assignments.'); return; }
+  buildSubjectSelect();
+  editingAssignId = id||null;
+  if (id) {
+    const a = state.assignments.find(x=>x.id===id); if (!a) return;
+    document.getElementById('assign-modal-title').textContent = '✎ Edit Assignment';
+    document.getElementById('assign-title-input').value = a.title;
+    document.getElementById('assign-subj-input').value  = a.subjectId;
+    document.getElementById('assign-due-input').value   = a.dueDate||'';
+    document.getElementById('assign-xp-input').value    = String(a.xp||50);
+    document.getElementById('modal-assign-save').textContent = 'Save Changes';
+  } else {
+    document.getElementById('assign-modal-title').textContent = '📘 Add Assignment';
+    document.getElementById('assign-title-input').value = '';
+    document.getElementById('assign-due-input').value   = '';
+    document.getElementById('assign-xp-input').value    = '50';
+    document.getElementById('modal-assign-save').textContent = 'Add Assignment';
+  }
+  openModal('modal-assign');
+}
+
+function saveAssign() {
+  const title = document.getElementById('assign-title-input').value.trim(); if (!title) return;
+  const subjId = parseInt(document.getElementById('assign-subj-input').value);
+  const due    = document.getElementById('assign-due-input').value;
+  const xp     = parseInt(document.getElementById('assign-xp-input').value)||50;
+  if (editingAssignId) {
+    const a = state.assignments.find(x=>x.id===editingAssignId);
+    if (a) { a.title=title; a.subjectId=subjId; a.dueDate=due; a.xp=xp; }
+  } else {
+    state.assignments.push({ id:state.nextId++, title, subjectId:subjId, dueDate:due, xp, done:false });
+  }
+  saveState(); closeModal('modal-assign'); editingAssignId=null;
+  renderUpcoming(); renderClassOverview(); renderSubjectCards(); renderSubjectsSidebar();
+  if (activeTab==='assignments') renderAssignFull();
+}
+
+document.getElementById('btn-add-assign').addEventListener('click',     () => openAssignModal());
+document.getElementById('btn-add-assign-tab').addEventListener('click', () => openAssignModal());
+document.getElementById('modal-assign-cancel').addEventListener('click', () => { closeModal('modal-assign'); editingAssignId=null; });
+document.getElementById('modal-assign-save').addEventListener('click', saveAssign);
+document.getElementById('assign-title-input').addEventListener('keydown', e => { if (e.key==='Enter') saveAssign(); });
+
+// Upcoming (dashboard)
+function renderUpcoming() {
+  const list = document.getElementById('upcoming-list');
+  list.innerHTML = '';
+  const pending = state.assignments.filter(a=>!a.done).sort((a,b)=>new Date(a.dueDate)-new Date(b.dueDate)).slice(0,6);
+  if (!pending.length) {
+    list.innerHTML='<div style="color:var(--muted);font-size:12px;text-align:center;padding:12px">No pending assignments 🎉</div>';
+    return;
+  }
+  pending.forEach(a => {
+    const s = subjById(a.subjectId);
+    const {cls,lbl} = dueChip(daysUntil(a.dueDate));
+    const el = document.createElement('div');
+    el.className = 'assign-item';
+    el.innerHTML = `
+      <div class="assign-bar" style="background:${s.color}"></div>
+      <div class="assign-info">
+        <div class="assign-title">${escH(a.title)}</div>
+        <div class="assign-meta">${escH(s.name)} · Due ${fmtDate(a.dueDate)}</div>
+      </div>
+      <button class="btn sm ghost icon" title="Edit" style="margin-right:2px">✎</button>
+      <button class="btn sm done-btn" title="Mark complete" style="margin-right:4px">✓</button>
+      <div class="due-chip ${cls}">${lbl}</div>
+    `;
+    const [editBtn, doneBtn] = el.querySelectorAll('button');
+    editBtn.addEventListener('click', () => openAssignModal(a.id));
+    doneBtn.addEventListener('click', () => markAssignDone(a.id));
+    list.appendChild(el);
+  });
+}
+
+// Full Assignments panel
+function renderAssignFull() {
+  const list = document.getElementById('assign-full-list');
+  list.innerHTML = '';
+  const filtered = state.assignments
+    .filter(a => assignFilter==='done' ? a.done : !a.done)
+    .sort((a,b)=>new Date(a.dueDate)-new Date(b.dueDate));
+  if (!filtered.length) {
+    list.innerHTML = `<div style="color:var(--muted);font-size:13px;text-align:center;padding:24px">${assignFilter==='done'?'No completed assignments yet.':'No pending assignments! 🎉'}</div>`;
+    return;
+  }
+  filtered.forEach(a => {
+    const s = subjById(a.subjectId);
+    const {cls,lbl} = dueChip(daysUntil(a.dueDate));
+    const el = document.createElement('div');
+    el.className = 'assign-full-item'+(a.done?' done-assign':'');
+    el.innerHTML = `
+      <div class="assign-bar" style="background:${s.color};height:46px"></div>
+      <div class="assign-full-info">
+        <div class="assign-full-title">${escH(a.title)}</div>
+        <div class="assign-full-meta">${escH(s.name)} · Due ${fmtDate(a.dueDate)} · ${a.xp} XP</div>
+      </div>
+      <div class="assign-full-actions">
+        <div class="due-chip ${cls}">${lbl}</div>
+        <button class="btn sm ghost icon" title="Edit">✎</button>
+        ${a.done
+          ? '<button class="btn sm ghost">Undo</button>'
+          : '<button class="btn sm done-btn">✓ Complete</button>'
+        }
+        <button class="btn sm ghost danger" title="Delete">✕</button>
+      </div>
+    `;
+    const [editBtn, toggleBtn, delBtn] = el.querySelectorAll('.assign-full-actions button');
+    editBtn.addEventListener('click',   () => openAssignModal(a.id));
+    toggleBtn.addEventListener('click', () => a.done ? undoAssign(a.id) : markAssignDone(a.id));
+    delBtn.addEventListener('click',    () => deleteAssign(a.id));
+    list.appendChild(el);
+  });
+}
+
+document.getElementById('filter-pending').addEventListener('click', () => {
+  assignFilter='pending';
+  document.getElementById('filter-pending').style.cssText    = 'border-color:rgba(124,58,237,.5);color:var(--purple-l)';
+  document.getElementById('filter-done-assign').className    = 'btn ghost';
+  document.getElementById('filter-done-assign').style.cssText= '';
+  renderAssignFull();
+});
+document.getElementById('filter-done-assign').addEventListener('click', () => {
+  assignFilter='done';
+  document.getElementById('filter-done-assign').style.cssText = 'border-color:rgba(34,197,94,.5);color:var(--green-l)';
+  document.getElementById('filter-pending').style.cssText     = '';
+  renderAssignFull();
+});
+
+// ═══════════════════════════════════════════════════════
+//  REWARDS
+// ═══════════════════════════════════════════════════════
+const REWARDS = [
+  { icon:'⚔️', name:'First Quest',      desc:'Complete your first quest',        check: s=>s.quests.some(q=>q.done) },
+  { icon:'🌟', name:'Quest Streak',      desc:'Complete 5 quests in one day',     check: s=>s.quests.filter(q=>q.done).length>=5 },
+  { icon:'🔥', name:'On Fire',           desc:'Reach a 3-day habit streak',       check: s=>s.habits.some(h=>h.streak>=3) },
+  { icon:'💎', name:'Dedicated',         desc:'Reach a 7-day habit streak',       check: s=>s.habits.some(h=>h.streak>=7) },
+  { icon:'📘', name:'Assignment Done',   desc:'Complete your first assignment',   check: s=>s.assignments.some(a=>a.done) },
+  { icon:'🏅', name:'XP Rookie',         desc:'Earn 100 total XP',                check: s=>s.xp.total>=100 },
+  { icon:'🥈', name:'XP Veteran',        desc:'Earn 500 total XP',                check: s=>s.xp.total>=500 },
+  { icon:'🥇', name:'XP Legend',         desc:'Earn 1000 total XP',               check: s=>s.xp.total>=1000 },
+  { icon:'🧘', name:'Habit Collector',   desc:'Have 5+ habits',                   check: s=>s.habits.length>=5 },
+  { icon:'📚', name:'Scholar',           desc:'Add 3+ subjects',                  check: s=>s.subjects.length>=3 },
+  { icon:'🚀', name:'Overachiever',      desc:'Complete 5+ assignments',          check: s=>s.assignments.filter(a=>a.done).length>=5 },
+];
+
+function renderRewards() {
+  const grid = document.getElementById('rewards-grid');
+  grid.innerHTML = '';
+  REWARDS.forEach(r => {
+    const unlocked = r.check(state);
+    const card = document.createElement('div');
+    card.className = 'reward-card '+(unlocked?'unlocked':'locked');
+    card.innerHTML = `<div class="reward-icon">${r.icon}</div><div class="reward-name">${r.name}</div><div class="reward-desc">${r.desc}</div><div class="reward-status ${unlocked?'ok':'no'}">${unlocked?'✓ Unlocked':'Locked'}</div>`;
+    grid.appendChild(card);
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+//  MODAL HELPERS
+// ═══════════════════════════════════════════════════════
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-backdrop').forEach(m => {
+  m.addEventListener('click', e => { if (e.target===m) m.classList.remove('open'); });
+});
+
+// ═══════════════════════════════════════════════════════
+//  BOOT
+// ═══════════════════════════════════════════════════════
+updateAllXP();
+renderSubjectsSidebar();
+renderTagPills();
+renderClassOverview();
+renderSubjectCards();
+buildSubjectSelect();
+renderQuests();
+renderHabits();
+renderUpcoming();
+</script>
+</body>
+</html>
